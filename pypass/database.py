@@ -51,7 +51,7 @@ class Database:
 			raise ValueError("Error: No matching account.")
 		elif len(matched) == 1:
 			# print and return the one matching account
-			print(f">>>>> {matched[0]}")
+			print(f">>>>>>> {matched[0]}")
 			return matched[0]
 		else:
 			# enumerate and print matched

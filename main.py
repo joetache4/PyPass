@@ -1,13 +1,14 @@
 import sys
 import os
 import traceback
+
 import pypass
 
 
 if __name__ == "__main__":
 	try:
 		
-		print("===== pass =====")
+		print("==== pypass ====")
 		
 		db   = pypass.Database()
 		args = sys.argv[1:]
@@ -24,7 +25,7 @@ if __name__ == "__main__":
 			pypass.parse(db, "ls")
 			# parse input
 			while True:
-				line = input("pass> ")
+				line = input("pypass> ")
 				if line == "":
 					if pypass.parser.yesno("Quit?", "y"):
 						break
