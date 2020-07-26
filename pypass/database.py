@@ -23,7 +23,7 @@ class Database:
 		
 		self.all = set()
 		for dirpath, dirnames, filenames in os.walk("."):
-			dirpath = dirpath[2:] # remove './'
+			dirpath = os.path.relpath(dirpath) # remove './' at start
 			for name in filenames:
 				if not name.startswith("."):
 					path = os.path.join(dirpath, name)
