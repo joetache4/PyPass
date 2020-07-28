@@ -23,9 +23,9 @@ class MasterKey:
 		
 		exists = os.path.isfile
 		if not (exists(self.keyfile) and exists(self.saltfile)):
-			self.save(master)
-		if master is not None:
-			self.login(master)
+			master = self.save(master)
+		#if master is not None:
+		self.login(master)
 
 	def save(self, master = None, prompt = "New Master Password: "):
 		"""
@@ -43,6 +43,7 @@ class MasterKey:
 		kek = self._kek(master)
 		with open(self.keyfile, "wb") as f:
 			f.write(kek.encrypt(self.bkey))
+		return master
 	
 	def login(self, master = None, prompt = "Master Password: "):
 		"""
@@ -100,6 +101,8 @@ def generate_password(length = 16, symbols = True):
 	"""
 	Generate a password of the given length, with or without symbol characters.
 	"""
+	if length < 8:
+		raise ValueError("Password must be at least 8 characters long.")
 	charsets = []
 	charsets.append("abcdefghijkmnpqrstuvwxyz")
 	charsets.append("ABCDEFGHJKLMNPQRSTUVWXYZ")

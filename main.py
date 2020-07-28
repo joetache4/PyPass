@@ -10,29 +10,28 @@ if __name__ == "__main__":
 		
 		print("==== pypass ====")
 		
-		db   = pypass.Database()
-		args = sys.argv[1:]
+		# log in
+		while True:		
+			try:
+				parser = pypass.Parser()
+				break
+			except ValueError as e:
+				print(e)
+		print("Entering interactive mode. Enter a blank line to exit.")
+		parser.parse("ls")
 		
-		if len(args) == 0: # interactive mode
-			# log in
-			while True:		
+		# parse input
+		while True:
+			line = input("pypass> ")
+			if line:
 				try:
-					db.login()
-					break
+					parser.parse(line)
+				except KeyboardInterrupt:
+					print() # do nothing else
 				except ValueError as e:
 					print(e)
-			print("Entering interactive mode. Enter a blank line to exit.")
-			pypass.parse(db, "ls")
-			# parse input
-			while True:
-				line = input("pypass> ")
-				if line == "":
-					if pypass.parser.yesno("Quit?", "y"):
-						break
-				else:
-					pypass.parse(db, line)
-		else: # simply parse command line args
-			pypass.parse(db, args)
+			elif input("Quit? [Y/n]").lower() not in ["n", "no"]:
+				break
 		
 	except (KeyboardInterrupt, EOFError):
 		pass

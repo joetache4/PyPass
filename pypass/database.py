@@ -24,13 +24,15 @@ class Database:
 		self.all = set()
 		for dirpath, dirnames, filenames in os.walk("."):
 			dirpath = os.path.relpath(dirpath) # remove './' at start
+			if dirpath == ".":
+				dirpath = ""
 			for name in filenames:
 				if not name.startswith("."):
 					path = os.path.join(dirpath, name)
 					self.all.add(path)
 
-	def login(self, master = None):
-		self.key.login(master)
+	#def login(self, master = None):
+	#	self.key.login(master)
 
 	def accounts(self, filter = ""):
 		matched = []
