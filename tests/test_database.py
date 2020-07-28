@@ -7,4 +7,4 @@ from .context import pypass
 class TestDatabase:
 	
 	def test_init(self):
-		db = pypass.Database("password")
+		db = pypass.database.Database("password")

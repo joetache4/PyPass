@@ -1,4 +1,5 @@
 import os
+import random
 import pytest
 
 from .context import pypass
@@ -24,4 +25,15 @@ class TestCrypto:
 		key = pypass.crypto.MasterKey("pw")
 	
 	def test_generate_password(self):
-		pass
+		with pytest.raises(ValueError):
+			pypass.crypto.generate_password(7, False)
+		for i in range(10):
+			length = random.randint(8, 32)
+			symbol = random.choice([True, False])
+			passwd = pypass.crypto.generate_password(length, symbol)
+			assert len(passwd) == length
+			assert any(c in passwd for c in "abcdefghijkmnpqrstuvwxyz")
+			assert any(c in passwd for c in "ABCDEFGHJKLMNPQRSTUVWXYZ")
+			assert any(c in passwd for c in "23456789")
+			if symbol:
+				assert any(c in passwd for c in "!@#$%^&*()-+=.,?<>_:{}|*/")

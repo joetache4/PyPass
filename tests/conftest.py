@@ -23,9 +23,10 @@ def helpers():
 
 
 class Helpers:
+
 	@staticmethod
 	@contextmanager
-	def replace_stdin(lines):
+	def replace_stdin(lines = []):
 		lines = [(s if s.endswith("\n") else s + "\n") for s in lines]
 		lines = StringIO("".join(lines))
 		orig = sys.stdin
@@ -36,6 +37,10 @@ class Helpers:
 	@staticmethod
 	def lines_str(lines):
 		return "".join(x + "\n" for x in lines)
+	
+	class ShellFunc:
+		def __init__(self): self.called = False
+		def call(self, *args): self.called = True
 
 '''
 def test_replace_stdin():
