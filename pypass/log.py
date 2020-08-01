@@ -1,8 +1,8 @@
 import logging
 
-def configure_logging(file):		
+def configure_logging(file, lvl = logging.INFO):		
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    logger.setLevel(lvl)
     logger.propagate = 0
     
 	# Format
