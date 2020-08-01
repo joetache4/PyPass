@@ -6,32 +6,20 @@ from contextlib import ContextDecorator
 import pypass
 
 
-class chdir (ContextDecorator):
-	def __init__(self, dir):
-		self.dir = dir
-	def __enter__(self):
-		self.old_dir = os.getcwd()
-		try:
-			os.chdir(self.dir)
-		except FileNotFoundError:
-			os.mkdir(self.dir)
-			os.chdir(self.dir)
-		return self
-	def __exit__(self, typ, val, traceback):
-		os.chdir(self.old_dir)
-		
-
-@chdir("db")
 def main():
 	try:
-		pypass.configure_logging(".log.txt")
+		try:
+			os.mkdir("db")
+		except OSError:
+			pass
+		pypass.configure_logging("db/.log")
 		
 		print("==== pypass ====")
 		
 		# log in
 		while True:		
 			try:
-				parser = pypass.Parser()
+				parser = pypass.Parser(None, "db")
 				break
 			except ValueError as e:
 				print(e)

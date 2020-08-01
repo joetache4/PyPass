@@ -6,9 +6,17 @@ import argparse
 import textwrap
 import pyperclip
 import logging
+from contextlib import contextmanager
 
 from .database import Database
 
+
+@contextmanager
+def _chdir(dir):
+	old_dir = os.getcwd()
+	os.chdir(dir)
+	yield
+	os.chdir(old_dir)
 
 class Parser:
 		
@@ -48,9 +56,11 @@ class Parser:
 	parser.add_argument('-t', '--time', dest = 'seconds', nargs = 1, default = 20,
 						help = 'time, in seconds, to keep the password copied to the clipboard')
 	
-	def __init__(self, master = None):
+	def __init__(self, master = None, dir = "."):
 		self.logger = logging.getLogger()
-		self.db = Database(master)
+		self.dir = dir
+		with _chdir(self.dir):
+			self.db = Database(master)
 
 	def parse(self, args):
 		"""
@@ -88,12 +98,16 @@ class Parser:
 			if args.arg:
 				raise ValueError("Error: Could not parse arguments.")
 			args.command, args.arg = "copy", args.command
+
+		if args.command == "load":
+			args.arg = os.path.abspath(args.arg)
 		
 		lvl = 	logging.WARNING if args.command in ["master", "add", "rm", "edit", "mv", "load"] \
 				else logging.INFO if args.command in ["copy", "print"] else logging.DEBUG
 		self.logger.log(lvl, f"{vars(args)}")
 		
-		run[args.command](args)
+		with _chdir(self.dir):
+			run[args.command](args)
 
 
 	### Command handlers ##################################################
@@ -152,7 +166,7 @@ class Parser:
 					raise ValueError(f"Error: Account {account} already exists.")
 				if os.path.isdir(block[0]):
 					raise ValueError(f"Error: {account} is an existing directory.")
-				self.db.add_block(block[0], block[1:], self.db)
+				self.db.add_block(block[0], block[1:])
 			except ValueError as e:
 				print(e)
 
