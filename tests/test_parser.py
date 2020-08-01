@@ -94,7 +94,7 @@ class TestParser:
 			p.parse("mv b a/a")
 			assert not os.path.isfile("b")
 			assert not any(f.startswith("b.") for f in os.listdir(".backup"))
-			assert os.path.isfile("a")
+			assert os.path.isfile("a/a")
 			assert any(f.startswith("a.") for f in os.listdir(".backup/a"))
 			
 			p.parse("mv a b\\b") # autocompletes a
@@ -109,7 +109,7 @@ class TestParser:
 			assert os.path.isfile("a/a/a")
 			assert any(f.startswith("a.") for f in os.listdir(".backup/a/a"))
 	
-	def test_rm(self):
+	def test_rm(self, helpers, monkeypatch):
 		p = pypass.Parser("password")
 		
 		monkeypatch.setattr(pypass.Parser, "_clip_text", lambda: pytest.fail("Clipboard disabled"))
@@ -122,9 +122,9 @@ class TestParser:
 		
 		with helpers.replace_stdin():
 			p.parse("add aa/a -g --no-clip")
-			p.parse("rm a")
+			p.parse("rm a -y")
 			assert not os.path.isdir("aa")
-			assert any(f.startswith("a.") for f in os.listdir("aa/.backup"))
+			assert any(f.startswith("a.") for f in os.listdir(".backup/aa"))
 	
 	def test_ls(self, capsys, helpers):
 		p = pypass.Parser("password")
@@ -144,12 +144,62 @@ class TestParser:
 		assert captured.out == helpers.lines_str(["", "Accounts:", "  aaa", "  new account", ""])
 	
 	def test_print_account(self, helpers, capsys, monkeypatch):
-		pass
+		p = pypass.Parser("password")
+		
+		monkeypatch.setattr(pypass.Parser, "_clip_text", lambda: pytest.fail("Clipboard disabled"))
+		
+		with helpers.replace_stdin(["abc", "def"]):
+			p.parse("add aa -m --no-clip")
+		
+		with helpers.replace_stdin():
+			capsys.readouterr()
+			p.parse("print")
+			captured = capsys.readouterr()
+			assert captured.out == helpers.lines_str([">>>>>>> aa", "abc", "def"])
+			p.parse("print a")
+			captured = capsys.readouterr()
+			assert captured.out == helpers.lines_str([">>>>>>> aa", "abc", "def"])
+			p.parse("print aa")
+			captured = capsys.readouterr()
+			assert captured.out == helpers.lines_str([">>>>>>> aa", "abc", "def"])
+		
+			with pytest.raises(ValueError):
+				p.parse("print aaa")
 	
-	def test_edit(self):
-		pass
+	def test_edit(self, helpers, capsys, monkeypatch):
+		p = pypass.Parser("password")
+		
+		monkeypatch.setattr(pypass.Parser, "_clip_text", lambda: pytest.fail("Clipboard disabled"))
+		
+		with helpers.replace_stdin(["abc", "def"]):
+			p.parse("add aa -m --no-clip")
+		
+		with helpers.replace_stdin(["xyz", "123"]):
+			p.parse("edit aa --no-clip")
+			capsys.readouterr()
+			p.parse("print aa")
+			captured = capsys.readouterr()
+			assert captured.out == helpers.lines_str([">>>>>>> aa", "xyz", "123"])
+		
+		with helpers.replace_stdin(["jkl"]):
+			p.parse("edit aa -m --no-clip")
+			capsys.readouterr()
+			p.parse("print aa")
+			captured = capsys.readouterr()
+			assert captured.out == helpers.lines_str([">>>>>>> aa", "jkl"])
+		
+		with helpers.replace_stdin(["xyz", "123"]):
+			p.parse("edit aa --no-clip")
+			capsys.readouterr()
+			p.parse("print aa")
+			captured = capsys.readouterr()
+			assert captured.out == helpers.lines_str([">>>>>>> aa", "xyz"])
 	
-	def test_load(self):
+	def test_load(self, helpers, capsys, monkeypatch):
+		p = pypass.Parser("password")
+		
+		monkeypatch.setattr(pypass.Parser, "_clip_text", lambda: pytest.fail("Clipboard disabled"))
+		
 		sample = """
 cc pin
 083

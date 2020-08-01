@@ -195,7 +195,7 @@ class Parser:
 		os.rename(account, old_account)
 
 		try:
-			lines         = self.db.content(old_account, self.db)
+			lines         = self.db.content(old_account)
 			multiline    |= len(lines) > 1
 			lines         = "\n".join(lines)
 			print(lines)
