@@ -118,7 +118,7 @@ class Database:
 				for line in lines:
 					f.write(line + "\n")
 		except FileNotFoundError:
-			raise ValueError("fError: Could not create account: {account}")
+			raise ValueError(f"Error: Could not create account: {account}")
 		self.all.add(account)
 		self.backup(account)
 
