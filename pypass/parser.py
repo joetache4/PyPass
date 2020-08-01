@@ -92,7 +92,7 @@ class Parser:
 
 		self.logger.debug(f"Processed args: {args}")
 
-		args = Parser.parser.parse_args(args)
+		args = Parser.parser.parse_args(args) # TODO don't exit program if there's an error
 		
 		if args.command not in run.keys():
 			if args.arg:
@@ -139,8 +139,6 @@ class Parser:
 		self.db.key.login()
 		# get input file path
 		fname = args.arg
-		if not os.path.isabs(fname):
-			fname = os.path.join("..", fname) # TODO this seems janky
 
 		# read lines
 		with open(fname, "r") as f:
