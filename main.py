@@ -1,12 +1,30 @@
 import sys
 import os
 import traceback
+from contextlib import ContextDecorator
 
 import pypass
 
 
-if __name__ == "__main__":
+class chdir (ContextDecorator):
+	def __init__(self, dir):
+		self.dir = dir
+	def __enter__(self):
+		self.old_dir = os.getcwd()
+		try:
+			os.chdir(self.dir)
+		except FileNotFoundError:
+			os.mkdir(self.dir)
+			os.chdir(self.dir)
+		return self
+	def __exit__(self, typ, val, traceback):
+		os.chdir(self.old_dir)
+		
+
+@chdir("db")
+def main():
 	try:
+		pypass.configure_logging(".log.txt")
 		
 		print("==== pypass ====")
 		
@@ -38,3 +56,6 @@ if __name__ == "__main__":
 	#except:
 	#	track = traceback.format_exc()
 	#	print(track)
+
+if __name__ == "__main__":
+	main()

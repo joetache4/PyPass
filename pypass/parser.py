@@ -5,8 +5,9 @@ import shlex
 import argparse
 import textwrap
 import pyperclip
+import logging
 
-from . import database
+from .database import Database
 
 
 class Parser:
@@ -47,13 +48,15 @@ class Parser:
 	parser.add_argument('-t', '--time', dest = 'seconds', nargs = 1, default = 20,
 						help = 'time, in seconds, to keep the password copied to the clipboard')
 	
-	def __init__(self, master = None, dir = "db"):
-		self.db = database.Database(master, dir)
+	def __init__(self, master = None):
+		self.logger = logging.getLogger()
+		self.db = Database(master)
 
 	def parse(self, args):
 		"""
 		Parse the command line args and run the appropriate command.
-		"""
+		"""	
+		self.logger.debug(f"Parsing args: {args}")
 		run = {
 			"master": lambda args: self.master       (args),
 			"ls"    : lambda args: self.ls           (args),
@@ -77,12 +80,18 @@ class Parser:
 		if "-n" in args and "-g" not in args:
 			args.append("-g")
 
+		self.logger.debug(f"Processed args: {args}")
+
 		args = Parser.parser.parse_args(args)
 		
 		if args.command not in run.keys():
 			if args.arg:
 				raise ValueError("Error: Could not parse arguments.")
 			args.command, args.arg = "copy", args.command
+		
+		lvl = 	logging.WARNING if args.command in ["master", "add", "rm", "edit", "mv", "load"] \
+				else logging.INFO if args.command in ["copy", "print"] else logging.DEBUG
+		self.logger.log(lvl, f"{vars(args)}")
 		
 		run[args.command](args)
 
@@ -120,12 +129,9 @@ class Parser:
 			fname = os.path.join("..", fname) # TODO this seems janky
 
 		# read lines
-		lines = []
 		with open(fname, "r") as f:
-			line = f.readline()
-			while line:
-				lines.append(line.strip("\n"))
-				line = f.readline()
+			lines = f.readlines()
+			lines = [line.strip() for line in lines]
 
 		# separate into blocks
 		blocks = [[]]

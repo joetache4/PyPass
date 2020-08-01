@@ -1,25 +1,22 @@
-import math
 import os
 import time
 import shutil
+import logging
 
-from . import crypto
+from .crypto import MasterKey, generate_password
 
 
 class Database:
 	
-	def __init__(self, master = None, dir = "db"):
-		try:
-			os.chdir(dir)
-		except FileNotFoundError:
-			os.mkdir(dir)
-			os.chdir(dir)		
+	def __init__(self, master = None):
+		self.logger = logging.getLogger()
+		
 		try:
 			os.mkdir(".backup")
 		except OSError:
 			pass # exists
 		
-		self.key = crypto.MasterKey(master)
+		self.key = MasterKey(master)
 		
 		self.all = set()
 		for dirpath, dirnames, filenames in os.walk("."):
@@ -31,13 +28,10 @@ class Database:
 					path = os.path.join(dirpath, name)
 					self.all.add(path)
 
-	#def login(self, master = None):
-	#	self.key.login(master)
-
 	def accounts(self, filter = ""):
 		matched = []
 		for account in self.all:
-			if account.startswith(".backup") and not filter.startswith(".backup"):
+			if account.startswith(".") and not filter.startswith("."):
 				continue
 			if filter in account:
 				matched.append(account)
@@ -57,7 +51,7 @@ class Database:
 			return matched[0]
 		else:
 			# enumerate and print matched
-			width = math.floor(math.log(len(matched))) + 1
+			width = len(str(len(matched)))
 			for i, account in enumerate(matched):
 				i = str(i).rjust(width, ' ')
 				print(f"{i}. {account}")
@@ -65,7 +59,7 @@ class Database:
 			while True:
 				i = input("index> ")
 				if i == "":
-					raise KeyboardInterrupt
+					raise KeyboardInterrupt()
 				try:
 					i = int(i)
 					if i >= 0 and i < len(matched):
@@ -81,7 +75,7 @@ class Database:
 		
 		# generate pw if requested
 		if generate > 0:
-			lines.insert(0, crypto.generate_password(generate, symbols))
+			lines.insert(0, generate_password(generate, symbols))
 
 		# ask user for password
 		if lines == []:

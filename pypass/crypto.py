@@ -1,7 +1,8 @@
 import sys
+import os
 import base64
 import secrets
-import os
+import logging
 
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.backends import default_backend
@@ -13,13 +14,15 @@ class MasterKey:
 
 	LENGTH     = 32
 	SALT_LEN   = 16
-	ITERATIONS = 100000	
+	ITERATIONS = 100000
 	
 	def __init__(self, master = None, keyfile = ".key", saltfile = ".salt"):
-		self.keyfile  = keyfile
-		self.saltfile = saltfile
+		self.logger = logging.getLogger()
+		
+		self.keyfile  = os.path.abspath(keyfile)
+		self.saltfile = os.path.abspath(saltfile)
 		self.bkey = None
-		self.fkey = None
+		self.fkey = None		
 		
 		exists = os.path.isfile
 		if not (exists(self.keyfile) and exists(self.saltfile)):
@@ -59,7 +62,9 @@ class MasterKey:
 				with open(self.keyfile, "rb") as f:
 					self.bkey = kek.decrypt(f.read())
 					self.fkey = Fernet(self.bkey)
+					self.logger.info("Logged in.")
 			except InvalidToken:
+				self.logger.error(f"Login failed. Incorrect master password: {master}")
 				raise ValueError("Error: Invalid Master Password.")
 	
 	def encrypt(self, message):
