@@ -235,8 +235,11 @@ class Parser:
 		"""
 		self.db.key.login()
 		account = self.db.select(args.arg)
+		pw = self.db.content(account)[0]
 		if args.clip:
-			Parser._clip_text(self.db.content(account)[0], args.seconds)
+			Parser._clip_text(pw, args.seconds)
+		else:
+			print(pw)
 
 	def print_account(self, args):
 		"""
