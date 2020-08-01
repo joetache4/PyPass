@@ -212,9 +212,8 @@ AOL
 pw
 user: dudeguy
 
-amazon
+shopping/amazon
 pw
-dudeguy
 
 laptop
 1234
@@ -225,9 +224,33 @@ dog33@gmail.com
 
 geico
 $2011$
-pinkroses@aol.com
+pr@aol.com
+more
+even more
 
 """
+		with open("a", "a") as f:
+			f.write(sample)
+		acc = sorted(("cc pin", "gmail", "AOL", f"shopping{os.sep}amazon", "laptop", "netflix", "geico"))
+		acc = ["  " + a for a in acc]
+		
+		p.parse("load a")
+		
+		p.parse("ls")
+		captured = capsys.readouterr()
+		assert captured.out == helpers.lines_str(["", "Accounts:", *acc, ""])
+		
+		p.parse("print ama")
+		captured = capsys.readouterr()
+		assert captured.out == helpers.lines_str([f">>>>>>> shopping{os.sep}amazon", "pw"])
+		
+		p.parse("print 'cc pin'")
+		captured = capsys.readouterr()
+		assert captured.out == helpers.lines_str([">>>>>>> cc pin", "083"])
+		
+		p.parse("print geico")
+		captured = capsys.readouterr()
+		assert captured.out == helpers.lines_str([">>>>>>> geico", "$2011$", "pr@aol.com", "more", "even more"])
 	
 	def test_copy(self, helpers, monkeypatch):
 		p = pypass.Parser("master")

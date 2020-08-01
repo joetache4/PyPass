@@ -36,7 +36,7 @@ class Helpers:
 
 	@staticmethod
 	def lines_str(lines):
-		return "".join(x + "\n" for x in lines)
+		return "\n".join(lines) + "\n"
 	
 	class ShellFunc:
 		def __init__(self):
