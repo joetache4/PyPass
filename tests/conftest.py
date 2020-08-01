@@ -39,8 +39,12 @@ class Helpers:
 		return "".join(x + "\n" for x in lines)
 	
 	class ShellFunc:
-		def __init__(self): self.called = False
-		def call(self, *args): self.called = True
+		def __init__(self):
+			self.called = False
+			self.args = None
+		def call(self, *args):
+			self.called = True
+			self.args = args
 
 '''
 def test_replace_stdin():
