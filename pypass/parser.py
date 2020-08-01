@@ -148,16 +148,20 @@ class Parser:
 		# separate into blocks
 		blocks = [[]]
 		for line in lines:
-			if line == "" and blocks[-1] != []:
-				blocks.append([])
+			if line == "":
+				if blocks[-1] != []:
+					blocks.append([])
+				else:
+					pass
 			else:
 				blocks[-1].append(line)
 		if blocks[-1] == []:
 			blocks.pop()
-
+		
 		# add
 		for block in blocks:
 			block[0] = block[0].replace(".", "-")
+			block[0] = block[0].replace("/", os.sep)
 			try:
 				# check if account name is unavailable
 				if os.path.isfile(block[0]):
@@ -166,6 +170,7 @@ class Parser:
 					raise ValueError(f"Error: {account} is an existing directory.")
 				self.db.add_block(block[0], block[1:])
 			except ValueError as e:
+				self.logger.error(str(e))
 				print(e)
 
 	def add(self, args):
