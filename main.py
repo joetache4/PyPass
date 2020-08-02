@@ -32,7 +32,7 @@ def main():
 			if line:
 				try:
 					parser.parse(line)
-				except KeyboardInterrupt:
+				except (KeyboardInterrupt, EOFError):
 					print() # do nothing else
 				except ValueError as e:
 					print(e)

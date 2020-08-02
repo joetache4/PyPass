@@ -56,7 +56,7 @@ class MasterKey:
 			if master is None:
 				master = input(prompt)
 			if master == "":
-				raise KeyboardInterrupt()
+				raise EOFError()
 			kek = self._kek(master)
 			try:
 				with open(self.keyfile, "rb") as f:
