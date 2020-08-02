@@ -18,67 +18,113 @@ def _chdir(dir):
 	yield
 	os.chdir(old_dir)
 
+class ErrorCatchingArgumentParser(argparse.ArgumentParser):
+    def exit(self, status = 0, message = None):
+        raise EOFError()
+
 class Parser:
-		
-	parser = argparse.ArgumentParser(
-		prog = 'pypass',
-		formatter_class = argparse.RawDescriptionHelpFormatter,
-		description = 'Create, store, and retrieve passwords for multiple accounts.',
-		epilog = textwrap.dedent('''
-		commands:
-		  master	
-		  ls	 [ACCOUNT]
-		  load	  FILE
-		  add	 [ACCOUNT]
-		  edit	 [ACCOUNT]
-		  copy	 [ACCOUNT]
-		  print	 [ACCOUNT]
-		  mv	  ACCOUNT_FROM ACCOUNT_TO
-		  rm	 [ACCOUNT]
-		'''))
-	parser.add_argument('command', metavar = 'command', nargs = '?', default = 'copy',
-						help = 'command to perform')
-	parser.add_argument('arg', metavar = 'arg', nargs = '?', default = '',
-						help = 'command argument (usually an account name)')
-	parser.add_argument('arg2', metavar = 'arg2', nargs = '?', default = '',
-						help = '2nd argument for the mv command')
-	parser.add_argument('-g', '--generate', dest = 'length', nargs = '?', action = 'store',
-						default = -1, const = 16, type = int,
-						help = 'generate password (default: False/16 characters)')
-	parser.add_argument('-n', '--no-symbols', dest = 'symbols', action = 'store_false',
-						help = 'exclude symbols from generated passwords (default: False)')
-	parser.add_argument('-m', '--multiline', dest = 'multiline', action = 'store_true',
-						help = 'ask user for multiple lines of input')
-	parser.add_argument('-y', '--yes', dest = 'yes', action = 'store_true',
-						help = 'answer yes to any [y/n] prompts')
-	parser.add_argument('--no-clip', dest = 'clip', action = 'store_false',
-						help = 'do not copy passwords to the clipboard')
-	parser.add_argument('-t', '--time', dest = 'seconds', nargs = 1, default = 20,
-						help = 'time, in seconds, to keep the password copied to the clipboard')
 	
 	def __init__(self, master = None, dir = "."):
 		self.logger = logging.getLogger()
 		self.dir = dir
 		with _chdir(self.dir):
 			self.db = Database(master)
+		
+		self.parser = ErrorCatchingArgumentParser(
+			prog = "pypass",
+			#formatter_class = argparse.RawDescriptionHelpFormatter,
+			description = "Create, store, and retrieve passwords for multiple accounts.")
+		self.parser.add_argument("-y", "--yes", dest = "yes", action = "store_true",
+			help = "answer yes to any [y/n] prompts")
+		self.parser.add_argument("--no-clip", dest = "clip", action = "store_false",
+			help = "do not copy passwords to the clipboard")
+		self.parser.add_argument("-t", "--time", dest = "seconds", nargs = 1, default = 20, type = int,
+			help = "time, in seconds, to keep the password copied to the clipboard")
+		subparsers = self.parser.add_subparsers(dest = "command", title = "subcommands",
+			description = "type COMMAND -h to see how to use these subcommands")
+
+		parser_master = subparsers.add_parser("master", help = "change master password")
+
+		parser_ls = subparsers.add_parser("ls", help = "list accounts")
+		parser_ls.add_argument("arg", metavar = "filter", nargs = "?", default = "",
+			help = "optionally filter account names containing this string")
+
+		parser_load = subparsers.add_parser("load", help = "load accounts from a file")
+		parser_load.add_argument("infile", metavar = "file", type = argparse.FileType(),
+			help = "file to load (or '-' to read from the console); The file/input should be formatted as such: [ACCOUNT\nPASSWORD\n[MISC\n]*\n]+")
+
+		parser_add = subparsers.add_parser("add", help = "add a new account")
+		parser_add.add_argument("arg", metavar = "account_name", # nargs = 1 # saved as a list, causes problems
+			help = "name of the new account to add")
+		parser_add.add_argument("-g", "--generate", dest = "length", nargs = "?", action = "store",
+			default = -1, const = 16, type = int,
+			help = "generate password (default: False/16 characters)")
+		parser_add.add_argument("-n", "--no-symbols", dest = "symbols", action = "store_false",
+			help = "exclude symbols from generated passwords (default: False)")
+		parser_add.add_argument("-m", "--multiline", dest = "multiline", action = "store_true",
+			help = "ask user for multiple lines of input")
+		parser_add.add_argument("--no-clip", dest = "clip", action = "store_false",
+			help = "do not copy passwords to the clipboard")
+		parser_add.add_argument("-t", "--time", dest = "seconds", nargs = 1, default = 20, type = int,
+			help = "time, in seconds, to keep the password copied to the clipboard")
+
+		parser_edit = subparsers.add_parser("edit", help = "edit an existing account")
+		parser_edit.add_argument("arg", metavar = "account_name", nargs = "?", default = "",
+			help = "name of the account to edit")					
+		parser_edit.add_argument("-g", "--generate", dest = "length", nargs = "?", action = "store",
+			default = -1, const = 16, type = int,
+			help = "generate password (default: False/16 characters)")
+		parser_edit.add_argument("-n", "--no-symbols", dest = "symbols", action = "store_false",
+			help = "exclude symbols from generated passwords (default: False)")
+		parser_edit.add_argument("-m", "--multiline", dest = "multiline", action = "store_true",
+			help = "ask user for multiple lines of input")
+		parser_edit.add_argument("--no-clip", dest = "clip", action = "store_false",
+			help = "do not copy passwords to the clipboard")
+		parser_edit.add_argument("-t", "--time", dest = "seconds", nargs = 1, default = 20, type = int,
+			help = "time, in seconds, to keep the password copied to the clipboard")
+
+		parser_copy = subparsers.add_parser("copy", help = "copy an account password to the clipboard")
+		parser_copy.add_argument("arg", metavar = "account_name", nargs = "?", default = "",
+			help = "name of the account to copy")
+		parser_copy.add_argument("--no-clip", dest = "clip", action = "store_false",
+			help = "do not copy passwords to the clipboard")
+		parser_copy.add_argument("-t", "--time", dest = "seconds", nargs = 1, default = 20, type = int,
+			help = "time, in seconds, to keep the password copied to the clipboard")
+
+		parser_print = subparsers.add_parser("print", help = "print all account details")
+		parser_print.add_argument("arg", metavar = "account_name", nargs = "?", default = "",
+			help = "name of the account to print")
+
+		parser_mv = subparsers.add_parser("mv", help = "rename an account")
+		parser_mv.add_argument("arg", metavar = "account_name",
+			help = "name of the account to rename")
+		parser_mv.add_argument("arg2", metavar = "new_account_name",
+			help = "new name for the account")
+
+		parser_rm = subparsers.add_parser("rm", help = "delete an account")
+		parser_rm.add_argument("arg", metavar = "account_name", nargs = "?", default = "",
+			help = "name of the account to delete")
+		parser_rm.add_argument("-y", "--yes", dest = "yes", action = "store_true",
+			help = "answer yes to any [y/n] prompts")
+
+		parser_help = subparsers.add_parser("help", help = "show this help message and exit")
+
+		parser_master.set_defaults(func = self.master)
+		parser_ls.set_defaults(func = self.ls)
+		parser_load.set_defaults(func = self.load)
+		parser_add.set_defaults(func = self.add)
+		parser_edit.set_defaults(func = self.edit)
+		parser_copy.set_defaults(func = self.copy)
+		parser_print.set_defaults(func = self.print_account)
+		parser_mv.set_defaults(func = self.mv)
+		parser_rm.set_defaults(func = self.rm)
+		parser_help.set_defaults(func = lambda *x: self.parser.print_help())
 
 	def parse(self, args):
 		"""
 		Parse the command line args and run the appropriate command.
 		"""	
 		self.logger.debug(f"Parsing args: {args}")
-		run = {
-			"master": lambda args: self.master       (args),
-			"ls"    : lambda args: self.ls           (args),
-			"copy"  : lambda args: self.copy         (args),
-			"add"   : lambda args: self.add          (args),
-			"rm"    : lambda args: self.rm           (args),
-			"edit"  : lambda args: self.edit         (args),
-			"mv"    : lambda args: self.mv           (args),
-			"print" : lambda args: self.print_account(args),
-			"load"  : lambda args: self.load         (args),
-			"help"  : lambda args: Parser.parser.print_help()
-		}
 		
 		if isinstance(args, str):
 			args = args.replace("\\", "\\\\")
@@ -86,20 +132,19 @@ class Parser:
 		
 		args = [a.replace("/", os.sep) for a in args]
 
+		# default subcommand
+		if all(s not in args for s in ["master", "ls", "add", "rm", "edit", "mv", "load", "copy", "print", "help"]):
+			args.insert(0, "copy")
+		
 		# -n implies -g
 		if "-n" in args and "-g" not in args:
 			args.append("-g")
 
 		self.logger.debug(f"Processed args: {args}")
 
-		args = Parser.parser.parse_args(args) # TODO don't exit program if there's an error
-		
-		if args.command not in run.keys():
-			if args.arg:
-				raise ValueError("Error: Could not parse arguments.")
-			args.command, args.arg = "copy", args.command
+		args = self.parser.parse_args(args)
 
-		if args.command == "load":
+		if args.func is self.load:
 			args.arg = os.path.abspath(args.arg)
 		
 		lvl = 	logging.WARNING if args.command in ["master", "add", "rm", "edit", "mv", "load"] \
@@ -107,7 +152,7 @@ class Parser:
 		self.logger.log(lvl, f"{vars(args)}")
 		
 		with _chdir(self.dir):
-			run[args.command](args)
+			args.func(args)
 
 
 	### Command handlers ##################################################
@@ -137,13 +182,10 @@ class Parser:
 		Load password data from a file. Conflicts will be ignored. File is expected to have	account info in blocks separated by a single blank line. Each block will have the account name as the first line, followed by the password, and then any additional	information.
 		"""
 		self.db.key.login()
-		# get input file path
-		fname = args.arg
 
 		# read lines
-		with open(fname, "r") as f:
-			lines = f.readlines()
-			lines = [line.strip() for line in lines]
+		lines = args.infile.readlines()
+		lines = [line.strip() for line in lines]
 
 		# separate into blocks
 		blocks = [[]]
