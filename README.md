@@ -33,6 +33,7 @@ subcommands:
 
 ### `master` Command
 
+Change the master password. 
 ```
 usage: pypass master [-h]
 
@@ -42,6 +43,7 @@ optional arguments:
 
 ### `ls` Command
 
+List accounts.
 ```
 usage: pypass ls [-h] [filter]
 
@@ -54,6 +56,7 @@ optional arguments:
 
 ### `load` Command
 
+Load accounts from a file or the console. Use Ctrl-Z + Enter to finish console input.
 ```
 usage: pypass load [-h] file
 
@@ -67,6 +70,7 @@ optional arguments:
 
 ### `add` Command
 
+Add a new account. Use Ctrl-Z + Enter to finish console input if entering multiple lines. By default, the password is then copied to the clipboard.
 ```
 usage: pypass add [-h] [-g [LENGTH]] [-n] [-m] [--no-clip] [-t SECONDS] account_name
 
@@ -86,6 +90,7 @@ optional arguments:
 
 ### `edit` Command
 
+Edit an existing account. `-m` is implied if the account has multiple stored lines. Use Ctrl-Z + Enter to finish console input. By default, the password is then copied to the clipboard.
 ```
 usage: pypass edit [-h] [-g [LENGTH]] [-n] [-m] [--no-clip] [-t SECONDS] [account_name]
 
@@ -105,6 +110,7 @@ optional arguments:
 
 ### `copy` Command
 
+Copy an account password to the clipboard. If the `-no-clip` flag is given, the password will just be printed to console.
 ```
 usage: pypass copy [-h] [--no-clip] [-t SECONDS] [account_name]
 
@@ -120,6 +126,7 @@ optional arguments:
 
 ### `print` Command
 
+Print all account details to the console.
 ```
 usage: pypass print [-h] [account_name]
 
@@ -132,6 +139,7 @@ optional arguments:
 
 ### `mv` Command
 
+Rename an account.
 ```
 usage: pypass mv [-h] account_name new_account_name
 
@@ -145,6 +153,7 @@ optional arguments:
 
 ### `rm` Command
 
+Delete an account.
 ```
 usage: pypass rm [-h] [-y] [account_name]
 
@@ -158,6 +167,7 @@ optional arguments:
 
 ### `help` Command
 
+Print help.
 ```
 usage: pypass help [-h]
 
