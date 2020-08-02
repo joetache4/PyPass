@@ -47,22 +47,33 @@ class Database:
 			print(f">>>>>>> {matched[0]}")
 			return matched[0]
 		else:
-			# enumerate and print matched
-			width = len(str(len(matched)))
-			for i, account in enumerate(matched):
-				i = str(i).rjust(width, ' ')
-				print(f"{i}. {account}")
-			# ask for selection
-			while True:
-				i = input("index> ")
-				if i == "":
-					raise KeyboardInterrupt()
-				try:
-					i = int(i)
-					if i >= 0 and i < len(matched):
-						return matched[i]
-				except ValueError:
-					pass
+			return Database.reduce_selection(matched)
+	
+	@staticmethod
+	def reduce_selection(matched):
+		# enumerate and print matched
+		width = len(str(len(matched)))
+		for i, account in enumerate(matched):
+			i = str(i).rjust(width, ' ')
+			print(f"{i}. {account}")
+		# ask for selection
+		while True:
+			i = input("select> ")
+			if i == "":
+				raise EOFError()
+			try:
+				i = int(i)
+				# int input
+				return matched[i]
+			except ValueError:
+				# char input
+				new_matched = [m for m in matched if i in m]
+				if len(new_matched) == 1:
+					return new_matched[0]
+				elif len(new_matched) > 1:
+					return reduce_selection(new_matched)
+			except IndexError:
+				pass
 
 	def add_input(self, account, generate, multiline, symbols):
 		"""
