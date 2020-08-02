@@ -51,7 +51,7 @@ class Parser:
 
 		parser_load = subparsers.add_parser("load", help = "load accounts from a file")
 		parser_load.add_argument("infile", metavar = "file", type = argparse.FileType(),
-			help = "file to load (or '-' to read from the console); The file/input should be formatted as such: [ACCOUNT\nPASSWORD\n[MISC\n]*\n]+")
+			help = "file to load (or '-' to read from the console); The file/input should be formatted as such: [ACCOUNT\\nPASSWORD\\n[MISC\\n]*\\n]+")
 
 		parser_add = subparsers.add_parser("add", help = "add a new account")
 		parser_add.add_argument("arg", metavar = "account_name", # nargs = 1 # saved as a list, causes problems
