@@ -1,15 +1,17 @@
 import sys
 import os
-from io import StringIO
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from pypass import Parser
+from pypass.parser import Parser
 
-p = Parser()
+p = Parser(None)
 
 text = \
-f'''## Useage
+f'''# pypass
+Command-line password manager, written entirely in Python.
+
+## Useage
 
 ```
 {p.parser.format_help()}
@@ -88,8 +90,5 @@ Print help.
 '''
 
 text = [line + "\n" for line in text.split("\n")]
-
-with open("help_info.txt", "a") as f:
+with open("README.md", "w") as f:
 	f.writelines(text)
-
-input("Press Enter to exit.")

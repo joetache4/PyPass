@@ -8,7 +8,7 @@ from contextlib import contextmanager
 import pytest
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope = "function")
 def cleandir():
 	old_cwd = os.getcwd()
 	newpath = tempfile.mkdtemp()
@@ -17,7 +17,7 @@ def cleandir():
 	os.chdir(old_cwd)
 	shutil.rmtree(newpath)
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope = "function")
 def helpers():
 	return Helpers
 

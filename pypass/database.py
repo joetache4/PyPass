@@ -8,9 +8,12 @@ from .crypto import MasterKey, generate_password
 
 class Database:
 	
-	def __init__(self, master = None):
+	def __init__(self, dir = ".", master = None):
 		self.logger = logging.getLogger()
+		self.dir = dir
 		
+		old_dir = os.getcwd()
+		os.chdir(dir)
 		try:
 			os.mkdir(".backup")
 		except OSError:
@@ -24,6 +27,8 @@ class Database:
 				if not name.startswith("."):
 					path = os.path.join(dirpath, name)
 					self.all.add(os.path.relpath(path, "."))
+		
+		os.chdir(old_dir)
 
 	def accounts(self, filter = ""):
 		matched = []

@@ -3,12 +3,15 @@ import os
 import traceback
 from contextlib import ContextDecorator
 
-from . import Parser
-from . import configure_logging
+from .parser import Parser
+from .database import Database
+from .log import configure_logging
 
 
 def main():
 	try:
+	
+		os.chdir(os.path.dirname(__file__))
 		try:
 			os.mkdir("db")
 		except OSError:
@@ -20,7 +23,8 @@ def main():
 		# log in
 		while True:		
 			try:
-				parser = Parser(None, "db")
+				db = Database("db")
+				parser = Parser(db)
 				break
 			except ValueError as e:
 				print(e)

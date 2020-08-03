@@ -8,8 +8,6 @@ import pyperclip
 import logging
 from contextlib import contextmanager
 
-from .database import Database
-
 
 @contextmanager
 def _chdir(dir):
@@ -24,15 +22,11 @@ class ErrorCatchingArgumentParser(argparse.ArgumentParser):
 
 class Parser:
 	
-	def __init__(self, master = None, dir = "."):
+	def __init__(self, db):
 		self.logger = logging.getLogger()
-		self.dir = dir
-		with _chdir(self.dir):
-			self.db = Database(master)
+		self.db = db
 		
-		self.parser = ErrorCatchingArgumentParser(
-			prog = "pypass",
-			#formatter_class = argparse.RawDescriptionHelpFormatter,
+		self.parser = ErrorCatchingArgumentParser( prog = "pypass",
 			description = "Create, store, and retrieve passwords for multiple accounts.")
 		self.parser.add_argument("-y", "--yes", dest = "yes", action = "store_true",
 			help = "answer yes to any [y/n] prompts")
@@ -43,82 +37,82 @@ class Parser:
 		subparsers = self.parser.add_subparsers(dest = "command", title = "subcommands",
 			description = "type COMMAND -h to see how to use these subcommands")
 
-		parser_master = subparsers.add_parser("master", help = "change master password")
+		self.parser_master = subparsers.add_parser("master", help = "change master password")
 
-		parser_ls = subparsers.add_parser("ls", help = "list accounts")
-		parser_ls.add_argument("arg", metavar = "filter", nargs = "?", default = "",
+		self.parser_ls = subparsers.add_parser("ls", help = "list accounts")
+		self.parser_ls.add_argument("arg", metavar = "filter", nargs = "?", default = "",
 			help = "optionally filter account names containing this string")
 
-		parser_load = subparsers.add_parser("load", help = "load accounts from a file")
-		parser_load.add_argument("infile", metavar = "file", type = argparse.FileType(),
+		self.parser_load = subparsers.add_parser("load", help = "load accounts from a file")
+		self.parser_load.add_argument("infile", metavar = "file", type = argparse.FileType(),
 			help = "file to load (or '-' to read from the console); The file/input should be formatted as such: [ACCOUNT\\nPASSWORD\\n[MISC\\n]*\\n]+")
 
-		parser_add = subparsers.add_parser("add", help = "add a new account")
-		parser_add.add_argument("arg", metavar = "account_name", # nargs = 1 # saved as a list, causes problems
+		self.parser_add = subparsers.add_parser("add", help = "add a new account")
+		self.parser_add.add_argument("arg", metavar = "account_name", # nargs = 1 # saved as a list, causes problems
 			help = "name of the new account to add")
-		parser_add.add_argument("-g", "--generate", dest = "length", nargs = "?", action = "store",
+		self.parser_add.add_argument("-g", "--generate", dest = "length", nargs = "?", action = "store",
 			default = -1, const = 16, type = int,
 			help = "generate password (default: False/16 characters)")
-		parser_add.add_argument("-n", "--no-symbols", dest = "symbols", action = "store_false",
+		self.parser_add.add_argument("-n", "--no-symbols", dest = "symbols", action = "store_false",
 			help = "exclude symbols from generated passwords (default: False)")
-		parser_add.add_argument("-m", "--multiline", dest = "multiline", action = "store_true",
+		self.parser_add.add_argument("-m", "--multiline", dest = "multiline", action = "store_true",
 			help = "ask user for multiple lines of input")
-		parser_add.add_argument("--no-clip", dest = "clip", action = "store_false",
+		self.parser_add.add_argument("--no-clip", dest = "clip", action = "store_false",
 			help = "do not copy passwords to the clipboard")
-		parser_add.add_argument("-t", "--time", dest = "seconds", nargs = 1, default = 20, type = int,
+		self.parser_add.add_argument("-t", "--time", dest = "seconds", nargs = 1, default = 20, type = int,
 			help = "time, in seconds, to keep the password copied to the clipboard")
 
-		parser_edit = subparsers.add_parser("edit", help = "edit an existing account")
-		parser_edit.add_argument("arg", metavar = "account_name", nargs = "?", default = "",
+		self.parser_edit = subparsers.add_parser("edit", help = "edit an existing account")
+		self.parser_edit.add_argument("arg", metavar = "account_name", nargs = "?", default = "",
 			help = "name of the account to edit")					
-		parser_edit.add_argument("-g", "--generate", dest = "length", nargs = "?", action = "store",
+		self.parser_edit.add_argument("-g", "--generate", dest = "length", nargs = "?", action = "store",
 			default = -1, const = 16, type = int,
 			help = "generate password (default: False/16 characters)")
-		parser_edit.add_argument("-n", "--no-symbols", dest = "symbols", action = "store_false",
+		self.parser_edit.add_argument("-n", "--no-symbols", dest = "symbols", action = "store_false",
 			help = "exclude symbols from generated passwords (default: False)")
-		parser_edit.add_argument("-m", "--multiline", dest = "multiline", action = "store_true",
+		self.parser_edit.add_argument("-m", "--multiline", dest = "multiline", action = "store_true",
 			help = "ask user for multiple lines of input")
-		parser_edit.add_argument("--no-clip", dest = "clip", action = "store_false",
+		self.parser_edit.add_argument("--no-clip", dest = "clip", action = "store_false",
 			help = "do not copy passwords to the clipboard")
-		parser_edit.add_argument("-t", "--time", dest = "seconds", nargs = 1, default = 20, type = int,
+		self.parser_edit.add_argument("-t", "--time", dest = "seconds", nargs = 1, default = 20, type = int,
 			help = "time, in seconds, to keep the password copied to the clipboard")
 
-		parser_copy = subparsers.add_parser("copy", help = "copy an account password to the clipboard")
-		parser_copy.add_argument("arg", metavar = "account_name", nargs = "?", default = "",
+		self.parser_copy = subparsers.add_parser("copy", help = "copy an account password to the clipboard")
+		self.parser_copy.add_argument("arg", metavar = "account_name", nargs = "?", default = "",
 			help = "name of the account to copy")
-		parser_copy.add_argument("--no-clip", dest = "clip", action = "store_false",
+		self.parser_copy.add_argument("--no-clip", dest = "clip", action = "store_false",
 			help = "do not copy passwords to the clipboard")
-		parser_copy.add_argument("-t", "--time", dest = "seconds", nargs = 1, default = 20, type = int,
+		self.parser_copy.add_argument("-t", "--time", dest = "seconds", nargs = 1, default = 20, type = int,
 			help = "time, in seconds, to keep the password copied to the clipboard")
 
-		parser_print = subparsers.add_parser("print", help = "print all account details")
-		parser_print.add_argument("arg", metavar = "account_name", nargs = "?", default = "",
+		self.parser_print = subparsers.add_parser("print", help = "print all account details")
+		self.parser_print.add_argument("arg", metavar = "account_name", nargs = "?", default = "",
 			help = "name of the account to print")
 
-		parser_mv = subparsers.add_parser("mv", help = "rename an account")
-		parser_mv.add_argument("arg", metavar = "account_name",
+		self.parser_mv = subparsers.add_parser("mv", help = "rename an account")
+		self.parser_mv.add_argument("arg", metavar = "account_name",
 			help = "name of the account to rename")
-		parser_mv.add_argument("arg2", metavar = "new_account_name",
+		self.parser_mv.add_argument("arg2", metavar = "new_account_name",
 			help = "new name for the account")
 
-		parser_rm = subparsers.add_parser("rm", help = "delete an account")
-		parser_rm.add_argument("arg", metavar = "account_name", nargs = "?", default = "",
+		self.parser_rm = subparsers.add_parser("rm", help = "delete an account")
+		self.parser_rm.add_argument("arg", metavar = "account_name", nargs = "?", default = "",
 			help = "name of the account to delete")
-		parser_rm.add_argument("-y", "--yes", dest = "yes", action = "store_true",
+		self.parser_rm.add_argument("-y", "--yes", dest = "yes", action = "store_true",
 			help = "answer yes to any [y/n] prompts")
 
-		parser_help = subparsers.add_parser("help", help = "show this help message and exit")
+		self.parser_help = subparsers.add_parser("help", help = "show this help message and exit")
 
-		parser_master.set_defaults(func = self.master)
-		parser_ls.set_defaults(func = self.ls)
-		parser_load.set_defaults(func = self.load)
-		parser_add.set_defaults(func = self.add)
-		parser_edit.set_defaults(func = self.edit)
-		parser_copy.set_defaults(func = self.copy)
-		parser_print.set_defaults(func = self.print_account)
-		parser_mv.set_defaults(func = self.mv)
-		parser_rm.set_defaults(func = self.rm)
-		parser_help.set_defaults(func = lambda *x: self.parser.print_help())
+		self.parser_master.set_defaults(func = self.master)
+		self.parser_ls.set_defaults(func = self.ls)
+		self.parser_load.set_defaults(func = self.load)
+		self.parser_add.set_defaults(func = self.add)
+		self.parser_edit.set_defaults(func = self.edit)
+		self.parser_copy.set_defaults(func = self.copy)
+		self.parser_print.set_defaults(func = self.print_account)
+		self.parser_mv.set_defaults(func = self.mv)
+		self.parser_rm.set_defaults(func = self.rm)
+		self.parser_help.set_defaults(func = lambda *x: self.parser.print_help())
 
 	def parse(self, args):
 		"""
@@ -151,7 +145,7 @@ class Parser:
 				else logging.INFO if args.command in ["copy", "print"] else logging.DEBUG
 		self.logger.log(lvl, f"{vars(args)}")
 		
-		with _chdir(self.dir):
+		with _chdir(self.db.dir):
 			args.func(args)
 
 
