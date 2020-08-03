@@ -30,13 +30,15 @@ class Database:
 		
 		os.chdir(old_dir)
 
-	def accounts(self, filter = ""):
-		matched = []
+	def accounts(self, filter = "", list_all = True):
+		matched = set()
 		for account in self.all:
 			if account.startswith(".") and not filter.startswith("."):
 				continue
+			if not list_all and os.sep in account:
+				account = account.split(os.sep)[0] + os.sep
 			if filter in account:
-				matched.append(account)
+				matched.add(account)
 		return sorted(matched)
 
 	def select(self, filter = ""):

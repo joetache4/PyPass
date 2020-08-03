@@ -222,10 +222,16 @@ even more
 """
 		with open("a", "a") as f:
 			f.write(sample)
-		acc = sorted(("cc pin", "gmail", "AOL", f"shopping{os.sep}amazon", "laptop", "netflix", "geico"))
+		acc_all = sorted(("cc pin", "gmail", "AOL", f"shopping{os.sep}amazon", "laptop", "netflix", "geico"))
+		acc_all = ["  " + a for a in acc_all]
+		acc = sorted(("cc pin", "gmail", "AOL", f"shopping{os.sep}", "laptop", "netflix", "geico"))
 		acc = ["  " + a for a in acc]
 		
 		parser.parse("load a")
+		
+		parser.parse("ls -a")
+		captured = capsys.readouterr()
+		assert captured.out == helpers.lines_str(["", "Accounts:", *acc_all, ""])
 		
 		parser.parse("ls")
 		captured = capsys.readouterr()

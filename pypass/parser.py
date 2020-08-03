@@ -26,20 +26,24 @@ class Parser:
 		self.logger = logging.getLogger()
 		self.db = db
 		
-		self.parser = ErrorCatchingArgumentParser( prog = "pypass",
+		self.parser = ErrorCatchingArgumentParser(prog = "pypass",
 			description = "Create, store, and retrieve passwords for multiple accounts.")
 		self.parser.add_argument("-y", "--yes", dest = "yes", action = "store_true",
 			help = "answer yes to any [y/n] prompts")
 		self.parser.add_argument("--no-clip", dest = "clip", action = "store_false",
 			help = "do not copy passwords to the clipboard")
+		self.parser.add_argument("-a", "--all", dest = "list_all", action = "store_true",
+			help = "show all accounts inside subdirectories")
 		self.parser.add_argument("-t", "--time", dest = "seconds", nargs = 1, default = 20, type = int,
 			help = "time, in seconds, to keep the password copied to the clipboard")
 		subparsers = self.parser.add_subparsers(dest = "command", title = "subcommands",
-			description = "type COMMAND -h to see how to use these subcommands")
+			description = "Type 'COMMAND -h' to see how to use these subcommands.")
 
 		self.parser_master = subparsers.add_parser("master", help = "change master password")
 
 		self.parser_ls = subparsers.add_parser("ls", help = "list accounts")
+		self.parser_ls.add_argument("-a", "--all", dest = "list_all", action = "store_true",
+			help = "show all accounts inside subdirectories")
 		self.parser_ls.add_argument("arg", metavar = "filter", nargs = "?", default = "",
 			help = "optionally filter account names containing this string")
 
@@ -53,8 +57,9 @@ class Parser:
 		self.parser_add.add_argument("-g", "--generate", dest = "length", nargs = "?", action = "store",
 			default = -1, const = 16, type = int,
 			help = "generate password (default: False/16 characters)")
-		self.parser_add.add_argument("-n", "--no-symbols", dest = "symbols", action = "store_false",
-			help = "exclude symbols from generated passwords (default: False)")
+		self.parser_add.add_argument("-s", "--symbols", dest = "symbols", nargs = "?", action = "store",
+			default = None, const = "",
+			help = "symbols to select from when generating passwords; no symbols used if no argument given")
 		self.parser_add.add_argument("-m", "--multiline", dest = "multiline", action = "store_true",
 			help = "ask user for multiple lines of input")
 		self.parser_add.add_argument("--no-clip", dest = "clip", action = "store_false",
@@ -68,8 +73,9 @@ class Parser:
 		self.parser_edit.add_argument("-g", "--generate", dest = "length", nargs = "?", action = "store",
 			default = -1, const = 16, type = int,
 			help = "generate password (default: False/16 characters)")
-		self.parser_edit.add_argument("-n", "--no-symbols", dest = "symbols", action = "store_false",
-			help = "exclude symbols from generated passwords (default: False)")
+		self.parser_edit.add_argument("-s", "--symbols", dest = "symbols", nargs = "?", action = "store",
+			default = None, const = "",
+			help = "symbols to select from when generating passwords; no symbols used if no argument given")
 		self.parser_edit.add_argument("-m", "--multiline", dest = "multiline", action = "store_true",
 			help = "ask user for multiple lines of input")
 		self.parser_edit.add_argument("--no-clip", dest = "clip", action = "store_false",
@@ -131,7 +137,7 @@ class Parser:
 			args.insert(0, "copy")
 		
 		# -n implies -g
-		if "-n" in args and "-g" not in args:
+		if any(f in args for f in ["-s", "--symbols"]) and "-g" not in args:
 			args.append("-g")
 
 		self.logger.debug(f"Processed args: {args}")
@@ -141,8 +147,7 @@ class Parser:
 		if args.func is self.load:
 			args.arg = os.path.abspath(args.arg)
 		
-		lvl = 	logging.WARNING if args.command in ["master", "add", "rm", "edit", "mv", "load"] \
-				else logging.INFO if args.command in ["copy", "print"] else logging.DEBUG
+		lvl = logging.INFO if args.command in ["master", "add", "rm", "edit", "mv", "load"] else logging.DEBUG
 		self.logger.log(lvl, f"{vars(args)}")
 		
 		with _chdir(self.db.dir):
@@ -165,7 +170,7 @@ class Parser:
 		Print list of matching accounts.
 		"""
 		print()
-		accounts = self.db.accounts(args.arg)
+		accounts = self.db.accounts(args.arg, args.list_all)
 		print("Accounts:")
 		for a in accounts:
 			print(f"  {a}")

@@ -102,7 +102,7 @@ class MasterKey:
 		return kek
 
 
-def generate_password(length = 16, symbols = True):
+def generate_password(length = 16, symbols = None):
 	"""
 	Generate a password of the given length, with or without symbol characters.
 	"""
@@ -112,8 +112,10 @@ def generate_password(length = 16, symbols = True):
 	charsets.append("abcdefghijkmnpqrstuvwxyz")
 	charsets.append("ABCDEFGHJKLMNPQRSTUVWXYZ")
 	charsets.append("23456789")
-	if symbols:
+	if symbols is None:
 		charsets.append("!@#$%^&*()-+=.,?<>_:{}|*/")
+	elif symbols != "":
+		charsets.append(symbols)
 	alphabet = "".join(charsets)
 	while True:
 		password = "".join(secrets.choice(alphabet) for i in range(length))

@@ -28,11 +28,13 @@ class TestCrypto:
 			generate_password(7, False)
 		for i in range(10):
 			length = random.randint(8, 32)
-			symbol = random.choice([True, False])
+			symbol = random.choice([None, ""])
 			passwd = generate_password(length, symbol)
 			assert len(passwd) == length
 			assert any(c in passwd for c in "abcdefghijkmnpqrstuvwxyz")
 			assert any(c in passwd for c in "ABCDEFGHJKLMNPQRSTUVWXYZ")
 			assert any(c in passwd for c in "23456789")
-			if symbol:
+			if symbol is None:
 				assert any(c in passwd for c in "!@#$%^&*()-+=.,?<>_:{}|*/")
+			else:
+				assert all(c not in passwd for c in "!@#$%^&*()-+=.,?<>_:{}|*/")
