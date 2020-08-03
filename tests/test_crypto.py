@@ -2,7 +2,6 @@ import os
 import random
 import pytest
 
-#from .context import pypass
 from pypass.crypto import MasterKey, generate_password
 
 @pytest.mark.usefixtures("cleandir")

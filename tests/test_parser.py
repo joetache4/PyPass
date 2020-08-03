@@ -1,7 +1,6 @@
 import os
 import pytest
 
-#from .context import pypass
 from pypass.database import Database
 from pypass.parser import Parser
 
